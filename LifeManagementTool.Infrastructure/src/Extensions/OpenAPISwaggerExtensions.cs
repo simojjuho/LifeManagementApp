@@ -27,6 +27,9 @@ public static class OpenAPISwaggerExtensions
                               - Every task has an urgency classification and final due date if there is one.
                               - User role management and share tasks 
                               
+                              ## Used packages
+                              - Swashbuckle.AspNetCore
+                              
                               ## Plans for the future
                               My aim is to publish this on a private web site and use is by myself. If it works there might be a public version of the app. I'm not trying to compete with commercial apps but just myself.
                               """,

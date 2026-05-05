@@ -1,6 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifeManagementTool.Infrastructure", "LifeManagementTool.Infrastructure\LifeManagementTool.Infrastructure.csproj", "{0418730F-4EDA-4DA0-8D4D-57C58FAB638A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DC9C16B4-FCAD-4CB8-941D-59B933B8A316} = {DC9C16B4-FCAD-4CB8-941D-59B933B8A316}
+		{B0DF00C3-A9E8-47EC-8E60-B628A5D9B02F} = {B0DF00C3-A9E8-47EC-8E60-B628A5D9B02F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifeManagementTool.Core", "LifeManagementTool.Core\LifeManagementTool.Core.csproj", "{DC9C16B4-FCAD-4CB8-941D-59B933B8A316}"
 EndProject
