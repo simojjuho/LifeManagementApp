@@ -1,3 +1,4 @@
+using LifeManagementTool.Controller.Controllers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,16 +24,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
-app.MapGet("/", () =>
-{
-    var response = new
-    {
-        Message = "Hello! Welcome to LifeManagementTool! Endpoint documentation at /swagger",
-        Version = "0.1",
-        TimeOnly = DateTime.Now.ToString("dd.MM.yyyy HH.mm.ss"),
-    };
-    return Results.Ok(response);
-}).WithName("WelcomeMessage");
+app.MapHomeEndpoints();
 
 app.Run();  
