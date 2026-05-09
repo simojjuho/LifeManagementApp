@@ -1,6 +1,8 @@
-using LifeManagementTool.Controller.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
+using LifeManagementTool.Controller.Controllers;
+using LifeManagementTool.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +45,8 @@ app.UseHttpsRedirection();
 app.MapHomeEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<BlockIdentityEndpoints>();
 
 var authRouteGroup = app.MapGroup("/api/auth")
     .WithTags("Admin");

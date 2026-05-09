@@ -54,6 +54,35 @@ public static class OpenAPISwaggerExtensions
             {
                 [new OpenApiSecuritySchemeReference("bearer", doc)] = []
             });
+
+            string[] hiddenEndpoints =
+            [
+                "api/auth/register",
+                "api/auth/refresh",
+                "api/auth/confirmemail",
+                "api/auth/resendconfirmationemail",
+                "api/auth/forgotpassword",
+                "api/auth/resetpassword",
+                "api/auth/manage",
+                "api/auth/manage/info",
+                "api/auth/manage/2fa"
+            ];
+            
+            c.DocInclusionPredicate((docName, description) =>
+            {
+                var path = description.RelativePath.ToLowerInvariant();
+
+                if (path is null)
+                    return false;
+                
+                if (hiddenEndpoints.Contains(path, StringComparer.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                return true;
+
+            });
         });
         return services;
     }
