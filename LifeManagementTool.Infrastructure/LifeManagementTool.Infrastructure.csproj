@@ -16,6 +16,7 @@
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <ProjectReference Include="../LifeManagementTool.Core/LifeManagementTool.Core.csproj" />
+        <ProjectReference Include="../LifeManagementTool.Service/LifeManagementTool.Service.csproj" />
         <ProjectReference Include="../LifeManagementTool.Controller/LifeManagementTool.Controller.csproj" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.7" />

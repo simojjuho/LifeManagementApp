@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 using LifeManagementTool.Controller.Controllers;
 using LifeManagementTool.Middleware;
+using LifeManagementTool.Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,9 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 //Admin policy
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+
+//Admin policy
+builder.Services.AddTransient<IEmailSender, ConsoleEmailService>();
 
 //Add validation for minimal APIs
 builder.Services.AddValidation();
