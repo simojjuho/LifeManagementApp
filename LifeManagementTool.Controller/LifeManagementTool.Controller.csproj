@@ -15,4 +15,8 @@
       <Folder Include="src\Models\Request\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LifeManagementTool.Core\LifeManagementTool.Core.csproj" />
+    </ItemGroup>
+
 </Project>
