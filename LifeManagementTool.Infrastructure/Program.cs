@@ -30,7 +30,7 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 
-//Admin policy
+//Email service
 builder.Services.AddTransient<IEmailSender, ConsoleEmailService>();
 
 //Add validation for minimal APIs

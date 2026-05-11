@@ -3,7 +3,9 @@ using LifeManagementTool.Controller.DTOs;
 using LifeManagementTool.Core.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -21,30 +23,39 @@ public static class CustomIdentityEndpoints
         group.MapPost("/register-admin", RegisterUser)
             .WithName("RegisterAdmin")
             .WithSummary("Register a User")
-            .WithDescription("Registers a user must have admin role");
+            .WithDescription("Registers a user must have admin role")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);;
         //.RequireAuthorization("AdminPolicy");
+
+        group.MapPost("/reset-password", ResetPassword)
+            .WithName("ResetPassword")
+            .WithSummary("Resets a password")
+            .WithDescription("Resets a password")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
         return route;
     }
 
     private static async Task<IResult> RegisterUser(
-        RegisterUserRequest userDto,
+        RegisterUserRequest request,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         IEmailSender emailSender,
         IConfiguration config)
     {
-        if (await userManager.FindByEmailAsync(userDto.Email) is not null)
+        if (await userManager.FindByEmailAsync(request.Email) is not null)
         {
-            return Results.BadRequest($"User with email {userDto.Email} already exists");
+            return Results.BadRequest($"User with email {request.Email} already exists");
         }
 
         var user = new ApplicationUser
         {
-            UserName = userDto.Email,
-            Email = userDto.Email,
-            FirstName = userDto.FirstName,
-            LastName = userDto.LastName,
+            UserName = request.Email,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
         };
         
         var tempPassword = "TempPassword!24";
@@ -67,17 +78,60 @@ public static class CustomIdentityEndpoints
         var baseUrl = config["BaseURL"] ?? "localhost:7166";
         
         await emailSender.SendEmailAsync(
-            userDto.Email,
+            request.Email,
             "Account created",
             $"""
              Your account has been created. Please change your password by visiting {baseUrl}/Identity/Account/Setpassword.html
              
-             {baseUrl}/Setpassword.html?email={userDto.Email}&resetCode={encodedToken}")
+             {baseUrl}/Setpassword.html?email={request.Email}&resetCode={encodedToken}")
              
              """);
         
         
-        return Results.Ok((new { Message = $"Successfully registered user with email {userDto.Email}" }));
+        return Results.Ok((new { Message = $"Successfully registered user with email {request.Email}" }));
 
+    }
+
+    private static async Task<IResult> ResetPassword(
+        ResetPasswordRequest request,
+        UserManager<ApplicationUser> userManager)
+    {
+        if(
+            string.IsNullOrEmpty(request.Email) ||
+            string.IsNullOrEmpty(request.ResetCode) ||
+            string.IsNullOrEmpty(request.NewPassword))
+        {
+            return Results.BadRequest(new { Error = "All fields must be filled" });
+        }
+        
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+        {
+            return Results.BadRequest(new { Error = "User not found" });
+        }
+
+        try
+        {
+            var decodedToken = Encoding.UTF8.GetString(
+                WebEncoders.Base64UrlDecode(request.ResetCode));
+            var result = await userManager.ResetPasswordAsync(user, decodedToken, request.NewPassword);
+
+            if (result.Succeeded)
+            {
+                return Results.Ok(new { Message = "Successfully reset password" });
+            }
+            
+            return Results.BadRequest(new { Message = "Make sure you used big and small letters, numbers and special characters!" });
+        }
+        catch (FormatException)
+        {
+            return Results.BadRequest("Invalid reset code");
+        }
+        catch (Exception e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+        
+        
     }
 }
