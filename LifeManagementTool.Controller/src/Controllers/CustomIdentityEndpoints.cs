@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using System.Text;
 using LifeManagementTool.Controller.DTOs;
+using LifeManagementTool.Controller.Models.Response;
 using LifeManagementTool.Core.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -34,8 +36,47 @@ public static class CustomIdentityEndpoints
             .WithDescription("Resets a password")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
+        
+        group.MapPost("/forgot-password", ForgotPassword)
+            .WithName("ForgotPassword")
+            .WithSummary("Reset your forgotten password")
+            .WithDescription("Reset your password")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);;
+
+        group.MapGet("/manage/profile", GetProfileInfo)
+            .WithName("Get profile")
+            .WithDescription("Get current user profile")
+            .WithSummary("Get current user profile")
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
 
         return route;
+    }
+    
+    private static async Task<IResult> GetProfileInfo(
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> userManager
+    )
+    {
+        var user = await userManager.GetUserAsync(principal);
+
+        if (user is null)
+        {
+            return Results.NotFound(new { Error = "User not found" });
+        }
+
+        var response = new UserProfileResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            FullName = user.FullName
+        };
+        
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> RegisterUser(
@@ -46,7 +87,7 @@ public static class CustomIdentityEndpoints
         IConfiguration config)
     {
         if (await userManager.FindByEmailAsync(request.Email) is not null)
-        {
+        { 
             return Results.BadRequest($"User with email {request.Email} already exists");
         }
 
@@ -131,7 +172,44 @@ public static class CustomIdentityEndpoints
         {
             return Results.BadRequest(e.Message);
         }
+    }
+
+    private static async Task<IResult> ForgotPassword(
+        ForgotPasswordRequest  request,
+        UserManager<ApplicationUser> userManager,
+        IEmailSender emailSender,
+        IConfiguration config)
+    {
+        if (string.IsNullOrEmpty(request.Email))
+        {
+            return Results.BadRequest(new { Error = "Email is required" });
+        }
+        
+        var user = await userManager.FindByEmailAsync(request.Email);
+        
+        if (user == null)
+        {
+            return Results.BadRequest(new { Error = "If the user exists a message will be sent in the email address." });
+        }
+        
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        
+        var baseUrl = config["BaseURL"] ?? "localhost:7166";
+        var resetLink = $"{baseUrl}/reset-password.html?email={request.Email}&resetCode={encodedToken}";
+        
+        await emailSender.SendEmailAsync(
+            request.Email,
+            "Password reset",
+            $"""
+             Here is a link to reset your password. Please change your password by visiting {baseUrl}/Identity/Account/Setpassword.html
+
+             If you did not request for a new password please ignore this post. This email was sent without having a correct password.
+             
+             {resetLink}")
+             """);
         
         
+        return Results.Ok(new { Message = "Check your email for a password reset link." });
     }
 }

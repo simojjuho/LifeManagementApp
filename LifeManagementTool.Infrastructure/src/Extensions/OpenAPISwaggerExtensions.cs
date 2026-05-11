@@ -52,7 +52,7 @@ public static class OpenAPISwaggerExtensions
             
             c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement()
             {
-                [new OpenApiSecuritySchemeReference("bearer", doc)] = []
+                [new OpenApiSecuritySchemeReference("Bearer", doc)] = []
             });
 
             string[] hiddenEndpoints =
