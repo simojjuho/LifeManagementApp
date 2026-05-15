@@ -6,7 +6,6 @@ using LifeManagementTool.Controller.Models.Response;
 using LifeManagementTool.Core.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -62,6 +61,15 @@ public static class CustomIdentityEndpoints
             .Produces((StatusCodes.Status200OK))
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status500InternalServerError);
+
+        group.MapGet("/manage/users", ListAllUsers)
+            .WithName("Get a list of users")
+            .WithSummary("Get a list of users")
+            .WithDescription("Get a list of users")
+            .RequireAuthorization()
+            .Produces<IEnumerable<UserProfileResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
 
         return route;
     }
@@ -251,5 +259,22 @@ public static class CustomIdentityEndpoints
         }
         
         return Results.Ok(new { Message = "Successfully updated profile" });
+    }
+
+    private static async Task<IResult> ListAllUsers(
+        UserManager<ApplicationUser> userManager
+    )
+    {
+        var users = userManager.Users
+            .Select(u => new UserProfileResponse
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                FullName = u.FullName,
+                Email = u.Email
+            }).ToList();
+
+        return Results.Ok(users);
     }
 }
