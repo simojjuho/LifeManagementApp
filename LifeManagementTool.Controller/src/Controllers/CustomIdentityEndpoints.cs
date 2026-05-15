@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using LifeManagementTool.Controller.DTOs;
+using LifeManagementTool.Controller.Models.Request;
 using LifeManagementTool.Controller.Models.Response;
 using LifeManagementTool.Core.Entities;
 using Microsoft.AspNetCore.Builder;
@@ -50,7 +51,17 @@ public static class CustomIdentityEndpoints
             .WithSummary("Get current user profile")
             .RequireAuthorization()
             .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPut("/manage/profile", UpdateProfile)
+            .WithName("Update profile")
+            .WithSummary("Update current user profile")
+            .WithDescription("Update current user profile")
+            .RequireAuthorization()
+            .Produces((StatusCodes.Status200OK))
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status500InternalServerError);
 
         return route;
     }
@@ -211,5 +222,34 @@ public static class CustomIdentityEndpoints
         
         
         return Results.Ok(new { Message = "Check your email for a password reset link." });
+    }
+
+    private static async Task<IResult> UpdateProfile(
+        UpdateProfileRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> userManager)
+    {
+        if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName))
+        {
+            return Results.BadRequest(new { Error = "First name and last name must be provided" });
+        }
+        
+        var user = await userManager.GetUserAsync(principal);
+
+        if (user is null)
+        {
+            return Results.BadRequest( new { Error = "User not found" } );
+        }
+        
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return Results.InternalServerError($"Could not update profile: {result.Errors.First()}");
+        }
+        
+        return Results.Ok(new { Message = "Successfully updated profile" });
     }
 }
